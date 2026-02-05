@@ -24,8 +24,9 @@ steps:
       echo "Starting download..."
       # Using -v (verbose) can help see if the Authorization header is actually sent
       curl -fL -H "Authorization: Bearer $JF_TOKEN" \
-           "https://your-company.jfrog.io/artifactory/my-repo/my-file.zip" \
-           --output "$(Build.ArtifactStagingDirectory)/my-file.zip"
+           "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
+           --output microsoft.testplatform.testhost.17.14.1.nupkg \
+           --fail
            
       echo "Download complete."
 
