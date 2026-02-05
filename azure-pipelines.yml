@@ -1,38 +1,45 @@
+trigger:
+- main  # Change as necessary
+
+pool:
+  vmImage: 'ubuntu-latest'  # Specify your desired agent pool
+
 steps:
 - task: JfrogCliV2@1
   name: jfrogSetup
   inputs:
-    jfrogPlatformConnection: 'hts2'
+    jfrogPlatformConnection: 'hts2'  # Your JFrog connection
     command: 'jf rt ping'
 
 - task: Bash@3
   displayName: 'Download via Curl'
   env:
-    # Ensure this matches the 'name' of your JfrogCliV2 task
-    JF_TOKEN: $(jfrogSetup.oidc_token) 
+    JF_TOKEN: $(jfrogSetup.oidc_token)  # OIDC token from JFrog CLI task
   inputs:
     targetType: 'inline'
     script: |
       # Debug: Check if token is empty (prints length only for security)
       echo "Token length: ${#JF_TOKEN}"
-      
       if [ ${#JF_TOKEN} -le 10 ]; then
-        echo "Error: JF_TOKEN appears to be empty or too short. Check OIDC connection."
-        exit 1
+          echo "Error: JF_TOKEN appears to be empty or too short. Check OIDC connection."
+          exit 1
       fi
-
       echo "Starting download..."
-      # Using -v (verbose) can help see if the Authorization header is actually sent
-      curl -i -fL -H "Authorization: Bearer $JF_TOKEN" \
-           "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
-           --output microsoft.testplatform.testhost.17.14.1.nupkg \
-           --fail
-           
-      echo "Download complete."
+      # Use verbose flag to see the full request/response
+      curl -v -fL -H "Authorization: Bearer $JF_TOKEN" \
+      "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
+      --output microsoft.testplatform.testhost.17.14.1.nupkg --fail
+      
+      if [ $? -eq 0 ]; then
+          echo "Download complete."
+      else
+          echo "Download failed."
+          exit 1
+      fi
 
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
     script: |
-      echo "OIDC Username: $($jfStep.oidc_user)"
-      echo "OIDC Token: $jfrogSetup:oidc_token"
+      Write-Host "OIDC Username: $($jfStep.oidc_user)"  # If you have this variable, adjust accordingly
+      Write-Host "OIDC Token: $env:JF_TOKEN"  # Ensure you have access to this environment variable in PowerShell context
