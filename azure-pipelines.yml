@@ -10,29 +10,26 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
 - task: JfrogCliV2@1
   name: jfStep
   inputs:
     jfrogPlatformConnection: 'hts2'
     command: 'jf rt ping'
+    # Ensure OIDC is actually being used in the Service Connection 'hts2'
 
 - task: PowerShell@2
+  displayName: 'Debug OIDC Token'
+  env:
+    # Accessing the token from the task output variables
+    MY_TOKEN: $(jfStep.oidc_token) 
   inputs:
     targetType: 'inline'
     script: |
-      echo "OIDC Username: $($jfStep.oidc_user)"
-      echo "OIDC Token: $env:oidc_token"
-
-- task: Bash@3
-  inputs:
-    targetType: 'inline'
-    script: |
-            echo "OIDC Username: $($jfStep.oidc_user)"
-            echo "OIDC Token: $env:oidc_token"
+      Write-Host "Checking if token exists..."
+      # This will likely print *** because Azure DevOps masks secrets automatically
+      Write-Host "OIDC Token: $env:MY_TOKEN"
+      
+      # If you MUST see the characters (NOT RECOMMENDED for production), 
+      # you can trick the masker by spacing it out, but this is a security risk:
+      # $spacedToken = $env:MY_TOKEN -split '' -join ' '
+      # Write-Host "Spaced Token: $spacedToken"
