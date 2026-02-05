@@ -22,4 +22,4 @@ steps:
       echo "OIDC Username: $($jfStep.oidc_user)"
       echo "OIDC Token: $env:oidc_token"
       Write-Host "Checking downloaded files:"
-      Get-ChildItem -Path "local-target-dir/"
+      
