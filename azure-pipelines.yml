@@ -4,7 +4,7 @@ steps:
   inputs:
     jfrogPlatformConnection: 'hts2'
     # We run the command directly through the JFrog task
-    command: 'jf c export --format=json'
+    command: 'jf c export hts2'
 
 - powershell: |
     # The output of the previous JFrog task is stored in this variable
