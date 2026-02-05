@@ -5,29 +5,9 @@ steps:
     jfrogPlatformConnection: 'hts2'
     command: 'jf rt ping'
 
-- bash: |
-    # 1. Define the config path
-    CONF_PATH="$HOME/.jfrog/jfrog-cli.conf"
-    
-    if [ ! -f "$CONF_PATH" ]; then
-      echo "Config file not found at $CONF_PATH"
-      exit 1
-    fi
-
-    # 2. Extract the accessToken using sed
-    # This looks for the "accessToken" key and grabs the value
-    TOKEN=$(sed -n 's/.*"accessToken": "\(.*\)".*/\1/p' "$CONF_PATH" | head -n 1)
-
-    if [ -z "$TOKEN" ]; then
-      echo "AccessToken not found in $CONF_PATH"
-      # Let's print the file structure (omitting secrets) to see why
-      grep -v "accessToken" "$CONF_PATH"
-      exit 1
-    fi
-
-    echo "Token successfully extracted from config file."
-
-    # 3. Print in Hex to bypass Azure log masking
-    echo -n "$TOKEN" | xxd -p | tr -d '\n'
-    echo ""
-  displayName: 'Extract Token Directly from Config'
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo "OIDC Username: $($jfStep.oidc_user)"
+      echo "OIDC Token: $env:oidc_token"
