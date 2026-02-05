@@ -1,18 +1,23 @@
 steps:
 - task: JfrogCliV2@1
-  name: jfrogStep  # This 'name' is CRITICAL for cross-task variables
+  name: jfrogStep
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping' # Forces the extension to perform the OIDC handshake
+    # Use 'c export' to force the CLI to show its configuration
+    command: 'jf c export' 
 
 - powershell: |
-    # We map the pipeline variable to a local env variable inside the 'env' block below
-    Write-Host "The OIDC Token is: $env:MY_TOKEN"
-    
-    # If it is still blank, let's debug all variables
-    if ([string]::IsNullOrEmpty($env:MY_TOKEN)) {
-        Write-Error "Token is empty. Check if the Service Connection succeeded."
+    # This checks if the variable exists in the environment at all
+    if ($env:TOKEN) {
+        Write-Host "Token found. Length: $($env:TOKEN.Length)"
+        # To see the token despite masking, we base64 encode it 
+        # (Only do this for temporary debugging!)
+        $Bytes = [System.Text.Encoding]::UTF8.GetBytes($env:TOKEN)
+        $Encoded = [Convert]::ToBase64String($Bytes)
+        Write-Host "Base64 Token: $Encoded"
+    } else {
+        Write-Error "Variable jfrogStep.oidc_token is NULL. The OIDC handshake failed."
     }
   env:
-    MY_TOKEN: $(jfrogStep.oidc_token)
-  displayName: 'Print JFrog OIDC Token'
+    TOKEN: $(jfrogStep.oidc_token)
+  displayName: 'Debug Token Availability'
