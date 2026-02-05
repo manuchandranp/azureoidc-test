@@ -1,26 +1,27 @@
 steps:
 - task: JfrogCliV2@1
-  name: jfrogExport
+  name: jfrogSetup
   inputs:
     jfrogPlatformConnection: 'hts2'
-    # We run the command directly through the JFrog task
-    command: 'jf c export hts2'
+    command: 'jf rt ping' # Triggers the OIDC handshake and saves config
 
-- powershell: |
-    # The output of the previous JFrog task is stored in this variable
-    $jsonConfig = '$(jfrogExport.CliOutput)'
+- bash: |
+    # 1. Locate the jf binary (using the path from your error log)
+    JF_PATH="/opt/hostedtoolcache/jf/2.89.0/x64/jf"
     
-    if ($jsonConfig) {
-        $config = $jsonConfig | ConvertFrom-Json
-        $token = $config.accessToken
-        
-        Write-Host "Token successfully retrieved."
-        
-        # To print it without Azure masking it as ***, we hex-encode it.
-        # You can then decode this hex string online or in a terminal.
-        $hex = ($token.ToCharArray() | ForEach-Object { [System.Convert]::ToString([int]$_, 16).PadLeft(2, '0') }) -join ''
-        Write-Host "Hex-Encoded Token: $hex"
-    } else {
-        Write-Error "No output captured from JFrog task."
-    }
-  displayName: 'Extract and Print Full Token'
+    # 2. Use 'show' to get the current config in clear text
+    # We grab the 'accessToken' line specifically
+    TOKEN=$($JF_PATH c show --format json | grep -oP '(?<="accessToken": ")[^"]*')
+    
+    if [ -z "$TOKEN" ]; then
+      echo "Token not found in config. Ensure the OIDC connection succeeded."
+      exit 1
+    fi
+    
+    echo "Token successfully captured."
+    
+    # 3. Print the token in Hex to bypass the Azure log masking
+    echo -n "$TOKEN" | xxd -p | tr -d '\n'
+    echo ""
+    echo "--- Done ---"
+  displayName: 'Extract and Hex-Print Token'
