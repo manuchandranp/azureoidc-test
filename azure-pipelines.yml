@@ -23,7 +23,7 @@ steps:
 
       echo "Starting download..."
       # Using -v (verbose) can help see if the Authorization header is actually sent
-      curl -fL -H "Authorization: Bearer $JF_TOKEN" \
+      curl -i -fL -H "Authorization: Bearer $JF_TOKEN" \
            "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
            --output microsoft.testplatform.testhost.17.14.1.nupkg \
            --fail
