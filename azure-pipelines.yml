@@ -8,19 +8,24 @@ steps:
 - task: Bash@3
   displayName: 'Download via Curl'
   env:
-    # Capturing the OIDC token from the setup task
+    # Ensure this matches the 'name' of your JfrogCliV2 task
     JF_TOKEN: $(jfrogSetup.oidc_token) 
   inputs:
     targetType: 'inline'
     script: |
-      # Replace <ARTIF_URL> with your actual instance URL (e.g., https://myinstance.jfrog.io/artifactory)
-      # Replace <REPO_PATH> with the path to your file
+      # Debug: Check if token is empty (prints length only for security)
+      echo "Token length: ${#JF_TOKEN}"
       
+      if [ ${#JF_TOKEN} -le 10 ]; then
+        echo "Error: JF_TOKEN appears to be empty or too short. Check OIDC connection."
+        exit 1
+      fi
+
       echo "Starting download..."
-      curl -H "Authorization: Bearer $JF_TOKEN" \
-           -L "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
-           --output microsoft.testplatform.testhost.17.14.1.nupkg \
-           --fail
+      # Using -v (verbose) can help see if the Authorization header is actually sent
+      curl -fL -H "Authorization: Bearer $JF_TOKEN" \
+           "https://your-company.jfrog.io/artifactory/my-repo/my-file.zip" \
+           --output "$(Build.ArtifactStagingDirectory)/my-file.zip"
            
       echo "Download complete."
 
