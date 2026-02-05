@@ -1,37 +1,15 @@
-trigger:
-- main
-
-pool:
-  vmImage: 'ubuntu-latest'
-
 steps:
 - task: JfrogCliV2@1
   name: jfrogSetup
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping'
+    # It's good practice to keep the setup task focused on configuration
+    command: 'jf rt ping' 
 
-- task: Bash@3
-  displayName: 'Download via Curl'
-  env:
-    JF_TOKEN: $(jfrogSetup.oidc_token)  # Ensure this is set correctly
+- task: JfrogCliV2@1
+  displayName: 'Download Artifacts from Artifactory'
   inputs:
-    targetType: 'inline'
-    script: |
-      echo "Token length: ${#JF_TOKEN}"
-      if [ ${#JF_TOKEN} -le 10 ]; then
-          echo "Error: JF_TOKEN appears to be empty or too short. Check OIDC connection."
-          exit 1
-      fi
-      echo "Starting download..."
-      
-      curl -v -H "Authorization: Bearer $JF_TOKEN" \
-      "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
-      --output microsoft.testplatform.testhost.17.14.1.nupkg --fail
-      
-      if [ $? -eq 0 ]; then
-          echo "Download complete."
-      else
-          echo "Download failed."
-          exit 1
-      fi
+    jfrogPlatformConnection: 'hts2'
+    # Replace 'my-repo/path/to/files/' with your actual Artifactory path
+    # The '*' wildcard downloads all files in that path
+    command: 'jf rt dl "manu-generic-local/microsoft.testplatform.testhost.18.0.1.nupkg"'
