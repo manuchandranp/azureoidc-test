@@ -9,7 +9,7 @@ steps:
   displayName: 'Download via Curl'
   env:
     # Capturing the OIDC token from the setup task
-    JF_TOKEN: $(env.oidc_token) 
+    JF_TOKEN: $(jfrogSetup.oidc_token) 
   inputs:
     targetType: 'inline'
     script: |
@@ -19,7 +19,8 @@ steps:
       echo "Starting download..."
       curl -H "Authorization: Bearer $JF_TOKEN" \
            -L "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
-           --output microsoft.testplatform.testhost.17.14.1.nupkg 
+           --output microsoft.testplatform.testhost.17.14.1.nupkg \
+           --fail
            
       echo "Download complete."
 
@@ -28,4 +29,4 @@ steps:
     targetType: 'inline'
     script: |
       echo "OIDC Username: $($jfStep.oidc_user)"
-      echo "OIDC Token: $env:oidc_token"
+      echo "OIDC Token: $jfrogSetup:oidc_token"
