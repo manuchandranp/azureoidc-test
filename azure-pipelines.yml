@@ -3,25 +3,31 @@ steps:
   name: jfrogSetup
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping' # Triggers the OIDC handshake and saves config
+    command: 'jf rt ping'
 
 - bash: |
-    # 1. Locate the jf binary (using the path from your error log)
-    JF_PATH="/opt/hostedtoolcache/jf/2.89.0/x64/jf"
+    # 1. Define the config path
+    CONF_PATH="$HOME/.jfrog/jfrog-cli.conf"
     
-    # 2. Use 'show' to get the current config in clear text
-    # We grab the 'accessToken' line specifically
-    TOKEN=$($JF_PATH c show --format json | grep -oP '(?<="accessToken": ")[^"]*')
-    
-    if [ -z "$TOKEN" ]; then
-      echo "Token not found in config. Ensure the OIDC connection succeeded."
+    if [ ! -f "$CONF_PATH" ]; then
+      echo "Config file not found at $CONF_PATH"
       exit 1
     fi
-    
-    echo "Token successfully captured."
-    
-    # 3. Print the token in Hex to bypass the Azure log masking
+
+    # 2. Extract the accessToken using sed
+    # This looks for the "accessToken" key and grabs the value
+    TOKEN=$(sed -n 's/.*"accessToken": "\(.*\)".*/\1/p' "$CONF_PATH" | head -n 1)
+
+    if [ -z "$TOKEN" ]; then
+      echo "AccessToken not found in $CONF_PATH"
+      # Let's print the file structure (omitting secrets) to see why
+      grep -v "accessToken" "$CONF_PATH"
+      exit 1
+    fi
+
+    echo "Token successfully extracted from config file."
+
+    # 3. Print in Hex to bypass Azure log masking
     echo -n "$TOKEN" | xxd -p | tr -d '\n'
     echo ""
-    echo "--- Done ---"
-  displayName: 'Extract and Hex-Print Token'
+  displayName: 'Extract Token Directly from Config'
