@@ -14,18 +14,18 @@ steps:
 - task: Bash@3
   displayName: 'Download via Curl'
   env:
-    JF_TOKEN: $(jfrogSetup.oidc_token)  # Make sure the token is correctly set
+    JF_TOKEN: $(jfrogSetup.oidc_token)  # Ensure this is set correctly
   inputs:
     targetType: 'inline'
     script: |
-      echo "JF_TOKEN: $JF_TOKEN"  # (Careful with logging sensitive information)
       echo "Token length: ${#JF_TOKEN}"
       if [ ${#JF_TOKEN} -le 10 ]; then
           echo "Error: JF_TOKEN appears to be empty or too short. Check OIDC connection."
           exit 1
       fi
       echo "Starting download..."
-      curl -v -fL -H "Authorization: Bearer $JF_TOKEN" \
+      
+      curl -v -H "Authorization: Bearer $JF_TOKEN" \
       "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
       --output microsoft.testplatform.testhost.17.14.1.nupkg --fail
       
@@ -35,10 +35,3 @@ steps:
           echo "Download failed."
           exit 1
       fi
-
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "OIDC Username: $($jfStep.oidc_user)"
-      Write-Host "OIDC Token: $env:JF_TOKEN"
