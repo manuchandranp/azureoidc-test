@@ -1,14 +1,18 @@
 steps:
 - task: JfrogCliV2@1
-  name: jfrogStep
+  name: jfrogStep  # This 'name' is CRITICAL for cross-task variables
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping' # Triggering a simple command to initiate authentication
+    command: 'jf rt ping' # Forces the extension to perform the OIDC handshake
 
 - powershell: |
-    # Print the JFrog Access Token created via OIDC
-    # Note: Azure DevOps may mask this in the logs for security (***)
-    Write-Host "The OIDC Token is: $env:OIDC_TOKEN"
+    # We map the pipeline variable to a local env variable inside the 'env' block below
+    Write-Host "The OIDC Token is: $env:MY_TOKEN"
+    
+    # If it is still blank, let's debug all variables
+    if ([string]::IsNullOrEmpty($env:MY_TOKEN)) {
+        Write-Error "Token is empty. Check if the Service Connection succeeded."
+    }
   env:
-    OIDC_TOKEN: $(jfrogStep.oidc_token)
+    MY_TOKEN: $(jfrogStep.oidc_token)
   displayName: 'Print JFrog OIDC Token'
