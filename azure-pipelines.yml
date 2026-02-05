@@ -19,8 +19,7 @@ steps:
       echo "Starting download..."
       curl -H "Authorization: Bearer $JF_TOKEN" \
            -L "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
-           --output microsoft.testplatform.testhost.17.14.1.nupkg \
-           --vvv
+           --output microsoft.testplatform.testhost.17.14.1.nupkg 
            
       echo "Download complete."
 
