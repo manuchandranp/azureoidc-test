@@ -1,31 +1,30 @@
 trigger:
-- main  # Change as necessary
+- main
 
 pool:
-  vmImage: 'ubuntu-latest'  # Specify your desired agent pool
+  vmImage: 'ubuntu-latest'
 
 steps:
 - task: JfrogCliV2@1
   name: jfrogSetup
   inputs:
-    jfrogPlatformConnection: 'hts2'  # Your JFrog connection
+    jfrogPlatformConnection: 'hts2'
     command: 'jf rt ping'
 
 - task: Bash@3
   displayName: 'Download via Curl'
   env:
-    JF_TOKEN: $(jfrogSetup.oidc_token)  # OIDC token from JFrog CLI task
+    JF_TOKEN: $(jfrogSetup.oidc_token)  # Make sure the token is correctly set
   inputs:
     targetType: 'inline'
     script: |
-      # Debug: Check if token is empty (prints length only for security)
+      echo "JF_TOKEN: $JF_TOKEN"  # (Careful with logging sensitive information)
       echo "Token length: ${#JF_TOKEN}"
       if [ ${#JF_TOKEN} -le 10 ]; then
           echo "Error: JF_TOKEN appears to be empty or too short. Check OIDC connection."
           exit 1
       fi
       echo "Starting download..."
-      # Use verbose flag to see the full request/response
       curl -v -fL -H "Authorization: Bearer $JF_TOKEN" \
       "https://hts2.jfrog.io/artifactory/manu-generic-local/microsoft.testplatform.testhost.17.14.1.nupkg" \
       --output microsoft.testplatform.testhost.17.14.1.nupkg --fail
@@ -41,5 +40,5 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      Write-Host "OIDC Username: $($jfStep.oidc_user)"  # If you have this variable, adjust accordingly
-      Write-Host "OIDC Token: $env:JF_TOKEN"  # Ensure you have access to this environment variable in PowerShell context
+      Write-Host "OIDC Username: $($jfStep.oidc_user)"
+      Write-Host "OIDC Token: $env:JF_TOKEN"
