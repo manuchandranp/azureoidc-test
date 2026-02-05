@@ -3,11 +3,23 @@ steps:
   name: jfrogSetup
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping'
+    # It's good practice to keep the setup task focused on configuration
+    command: 'jf rt ping' 
+
+- task: JfrogCliV2@1
+  displayName: 'Download Artifacts from Artifactory'
+  inputs:
+    jfrogPlatformConnection: 'hts2'
+    # Replace 'my-repo/path/to/files/' with your actual Artifactory path
+    # The '*' wildcard downloads all files in that path
+    command: 'jf rt dl "manu-generic-local/microsoft.testplatform.testhost.18.0.1.nupkg"'
 
 - task: PowerShell@2
+  displayName: 'Verify OIDC and Files'
   inputs:
     targetType: 'inline'
     script: |
       echo "OIDC Username: $($jfStep.oidc_user)"
       echo "OIDC Token: $env:oidc_token"
+      Write-Host "Checking downloaded files:"
+      Get-ChildItem -Path "local-target-dir/"
