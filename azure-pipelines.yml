@@ -20,7 +20,7 @@ steps:
 - task: JfrogCliV2@1
   name: jfStep
   inputs:
-    jfrogPlatformConnection: 'azure-oidc'
+    jfrogPlatformConnection: 'hts2'
     command: 'jf rt ping'
 
 - task: PowerShell@2
