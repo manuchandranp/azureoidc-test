@@ -1,53 +1,14 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-trigger:
-- main
-
-pool:
-  vmImage: ubuntu-latest
-
 steps:
 - task: JfrogCliV2@1
-  name: jfStep
+  name: jfrogStep
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping'
-    # Ensure OIDC is actually being used in the Service Connection 'hts2'
+    command: 'jf rt ping' # Triggering a simple command to initiate authentication
 
-- task: PowerShell@2
-  displayName: 'Debug OIDC Token'
+- powershell: |
+    # Print the JFrog Access Token created via OIDC
+    # Note: Azure DevOps may mask this in the logs for security (***)
+    Write-Host "The OIDC Token is: $env:OIDC_TOKEN"
   env:
-    # Accessing the token from the task output variables
-    MY_TOKEN: $(jfStep.oidc_token) 
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "Checking if token exists..."
-      # This will likely print *** because Azure DevOps masks secrets automatically
-      Write-Host "OIDC Token: $env:MY_TOKEN"
-      
-      # If you MUST see the characters (NOT RECOMMENDED for production), 
-      # you can trick the masker by spacing it out, but this is a security risk:
-      # $spacedToken = $env:MY_TOKEN -split '' -join ' '
-      # Write-Host "Spaced Token: $spacedToken"
-
-- task: CmdLine@2
-  inputs:
-    script: |
-      script: 'echo "ID token: $(idToken)"'
-                    displayName: 'Print Azure ID token'  
-                  - task: CmdLine@2
-                    inputs:
-                      script: |
-                        set -x
-                        echo "##vso[task.setvariable variable=jfrogToken;issecret=true]$(curl --location 'https://hts2.jfrog.io/access/api/v1/oidc/token' --header 'Content-Type: application/json' --data '{"grant_type": "urn:ietf:params:oauth:grant-type:token-exchange", "subject_token_type": "urn:ietf:params:oauth:token-type:id_token", "subject_token": "$(idToken)", "provider_name": "azureoidc" } ' | jq .access_token | tr -d '"')"
-                        displayName: 'Acquire JFrog token' 
-
-- task: CmdLine@2
-  inputs:
-    script: |
-      script: 'echo "ID token: $(jfrogToken)"'
-                    displayName: "Display acquired JFrog token"
+    OIDC_TOKEN: $(jfrogStep.oidc_token)
+  displayName: 'Print JFrog OIDC Token'
