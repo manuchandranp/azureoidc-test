@@ -9,7 +9,7 @@ steps:
   displayName: 'Download via Curl'
   env:
     # Capturing the OIDC token from the setup task
-    JF_TOKEN: $(jfrogSetup.oidc_token) 
+    JF_TOKEN: $(env.oidc_token) 
   inputs:
     targetType: 'inline'
     script: |
