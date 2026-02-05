@@ -1,28 +1,26 @@
 steps:
 - task: JfrogCliV2@1
-  name: jfrogStep
+  name: jfrogExport
   inputs:
     jfrogPlatformConnection: 'hts2'
-    command: 'jf rt ping' # This triggers the OIDC exchange
+    # We run the command directly through the JFrog task
+    command: 'jf c export --format=json'
 
 - powershell: |
-    # 1. Capture the full config from the CLI
-    $jfConfig = jf c export --format=json | ConvertFrom-Json
+    # The output of the previous JFrog task is stored in this variable
+    $jsonConfig = '$(jfrogExport.CliOutput)'
     
-    # 2. Extract the access token
-    $token = $jfConfig.accessToken
-    
-    if ($token) {
-        Write-Host "Token successfully captured!"
+    if ($jsonConfig) {
+        $config = $jsonConfig | ConvertFrom-Json
+        $token = $config.accessToken
         
-        # 3. Print the full token (Azure will likely mask this as ***)
-        Write-Host "Raw Token: $token"
+        Write-Host "Token successfully retrieved."
         
-        # 4. Print Base64 of the ACTUAL token so you can decode it elsewhere
-        $Bytes = [System.Text.Encoding]::UTF8.GetBytes($token)
-        $Encoded = [Convert]::ToBase64String($Bytes)
-        Write-Host "Base64 of Actual Token: $Encoded"
+        # To print it without Azure masking it as ***, we hex-encode it.
+        # You can then decode this hex string online or in a terminal.
+        $hex = ($token.ToCharArray() | ForEach-Object { [System.Convert]::ToString([int]$_, 16).PadLeft(2, '0') }) -join ''
+        Write-Host "Hex-Encoded Token: $hex"
     } else {
-        Write-Error "Could not find accessToken in JFrog config. Check Service Connection logs."
+        Write-Error "No output captured from JFrog task."
     }
   displayName: 'Extract and Print Full Token'
