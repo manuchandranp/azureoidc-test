@@ -10,6 +10,6 @@ steps:
   displayName: 'Download Artifacts from Artifactory'
   inputs:
     jfrogPlatformConnection: 'hts2'
-    # Replace 'my-repo/path/to/files/' with your actual Artifactory path
-    # The '*' wildcard downloads all files in that path
-    command: 'jf rt dl "manu-generic-local/microsoft.testplatform.testhost.18.0.1.nupkg"'
+    command: |
+      jf rt dl "manu-generic-local/microsoft.testplatform.testhost.18.0.1.nupkg"
+      jf helm repo add ganavik-helm https://hts2.jfrog.io/artifactory/api/helm/ganavik-helm
